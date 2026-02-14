@@ -264,7 +264,7 @@ def server_error(e):
 
 # ── Entry Point ────────────────────────────────────────────
 if __name__ == '__main__':
-    # Initialize the database if it doesn't exist yet
+    # Initialize database if it doesn't exist yet
     if not os.path.exists(DATABASE):
         print("Database not found. Run 'python database.py' first to create it.")
     else:
