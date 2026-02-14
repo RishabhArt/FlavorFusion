@@ -2,6 +2,11 @@
 
 A Flask web application that matches user ingredients to recipes using an intelligent scoring algorithm.
 
+## 🌐 Live Demo
+
+[🚀 Click here to try FlavorFusion](https://flavorfusion-1-ud8o.onrender.com)
+
+
 ## Project Summary 
 
 The Smart Recipe Generator is a full-stack web application that solves a common kitchen problem: "What can I cook with what I have?" Users enter their available ingredients, and the system matches them against a database of 20 recipes using a percentage-based scoring algorithm. The matching works by comparing each user ingredient against recipe ingredients using substring matching (so "chicken" matches "chicken breast"), then calculating a score as the ratio of matched ingredients to total required ingredients.
