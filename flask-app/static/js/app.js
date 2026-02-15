@@ -870,12 +870,8 @@ function showSavedRecipes() {
             }
         });
         
-        // Render recipes
-        const html = filteredRecipes.map(function(recipe) {
-            return buildRecipeCard(recipe, false);
-        }).join('');
-        
-        document.getElementById('browse-container').innerHTML = html;
+        // Display recipes
+        displayBrowseRecipes(filteredRecipes);
         document.getElementById('browse-loading').style.display = 'none';
     })
     .catch(function() {
