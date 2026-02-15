@@ -1,5 +1,3 @@
-ctrl+shift+p(for command palette)
-
 # Smart Recipe Generator
 
 A Flask web application that matches user ingredients to recipes using an intelligent scoring algorithm.
