@@ -23,9 +23,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load all recipes for browse section
     loadAllRecipes();
     
-    // Load favorites
-    loadFavorites();
-    
     // Add event listeners
     document.getElementById('search-btn').addEventListener('click', searchRecipes);
     document.getElementById('ingredients-input').addEventListener('keypress', function(e) {
@@ -358,7 +355,14 @@ function buildRecipeCard(recipe, showScore) {
     card += '<button class="btn btn-secondary btn-small btn-favorite" onclick="toggleFavorite(' + recipe.id + ', this)">';
     card += (isFavorite ? 'Saved' : 'Save');
     card += '</button>';
-    card += '<button class="btn btn-secondary btn-small" onclick="showSubstitutions(' + recipe.id + ')">Substitutions</button>';
+    card += '<div class="rating-input">';
+    for (var i = 1; i <= 5; i++) {
+        card += '<button class="star" onclick="rateRecipe(' + recipe.id + ', ' + i + ', this)" title="Rate ' + i + '">';
+        card += i <= Math.round(recipe.rating) ? '★' : '☆';
+        card += '</button>';
+    }
+    card += '</div>';
+    card += '<button class="btn btn-secondary" onclick="showSubstitutions(' + recipe.id + ')">Substitutions</button>';
     card += '</div>';
 
     card += '</div>';
@@ -870,8 +874,12 @@ function showSavedRecipes() {
             }
         });
         
-        // Display recipes
-        displayBrowseRecipes(filteredRecipes);
+        // Render recipes
+        const html = filteredRecipes.map(function(recipe) {
+            return buildRecipeCard(recipe, false);
+        }).join('');
+        
+        document.getElementById('browse-container').innerHTML = html;
         document.getElementById('browse-loading').style.display = 'none';
     })
     .catch(function() {

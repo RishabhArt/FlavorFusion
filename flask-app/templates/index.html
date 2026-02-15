@@ -1,53 +1,44 @@
-{% extends "base.html" %}
-
-{% block content %}
-<!-- Hero Section -->
-<section class="hero-section">
-    <div class="container">
-        <div class="hero-content">
-            <h1>Smart Recipe Generator</h1>
-            <p>Find delicious recipes based on ingredients you have at home</p>
-            
-            <!-- Search Form -->
-            <div class="search-form">
-                <div class="input-group">
-                    <textarea id="ingredients-input" placeholder="Enter ingredients you have (one per line)&#10;e.g.,&#10;tomatoes&#10;pasta&#10;garlic&#10;onions" rows="4"></textarea>
-                    <button id="search-btn" class="btn btn-primary btn-large">Find Recipes</button>
-                </div>
-            </div>
-            
-            <!-- Image Upload -->
-            <div class="image-upload-section">
-                <div class="upload-container">
-                    <input type="file" id="image-upload" accept="image/*" style="display: none;">
-                    <button id="upload-btn" class="btn btn-secondary">📷 Upload Image</button>
-                    <div id="image-preview" class="image-preview" style="display: none;">
-                        <img id="preview-img" src="" alt="Uploaded image">
-                        <button id="remove-image" class="btn btn-small btn-danger">✕ Remove</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Results Section -->
-<section id="results-section" class="results-section" style="display:none;">
-    <div class="container">
-        <h2 id="results-heading">Top Matches</h2>
-        <p id="results-summary" class="results-summary"></p>
-        <div id="results-container" class="results-grid"></div>
-    </div>
-</section>
-
-<!-- Favorites Section -->
-<section id="favorites-section" class="favorites-section">
-    <div class="container">
-        <h2>⭐ Your Saved Favorites</h2>
-        <div id="favorites-container" class="results-grid"></div>
-    </div>
-</section>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Recipe Generator</title>
+    <meta name="description" content="Find recipes based on ingredients you already have. Smart matching with dietary filters and nutritional info.">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#f59e0b",
+                        background: "#ffffff",
+                        surface: "#f8fafc",
+                        text: "#1f2937",
+                        "text-light": "#6b7280",
+                        border: "#e5e7eb",
+                        "primary-light": "#f97316",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "full": "1rem"},
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom animations */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
         
         .animate-spin {
             animation: spin 1s linear infinite;
@@ -122,6 +113,15 @@
                 <!-- Image Upload (simulated) -->
                 <div class="form-group">
                     <label for="image-upload">Or upload a photo of your ingredients:</label>
+                    <div class="file-input-wrapper">
+    <input type="file" id="image-upload" accept="image/*">
+    <label for="image-upload" class="upload-btn-label">Choose File</label>
+</div>
+                    <div id="image-preview" class="image-preview" style="display:none;">
+                        <img id="preview-img" src="" alt="Ingredient preview">
+                        <p id="image-status">Detected: <span id="detected-ingredients"></span></p>
+                        <div class="image-actions" id="image-actions" style="display: none;">
+                            <button type="button" id="remove-image" class="remove-image-btn">Remove Image</button>
                         </div>
                     </div>
                 </div>
