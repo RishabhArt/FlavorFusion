@@ -43,9 +43,11 @@ body {
 
 /* ── Layout ────────────────────────────────────────────── */
 .container {
-    max-width: 900px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* ── Header ────────────────────────────────────────────── */
@@ -57,6 +59,29 @@ body {
     top: 0;
     z-index: 100;
     box-shadow: var(--shadow-md);
+}
+
+.nav-links {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.nav-link {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    transition: background-color 0.2s;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
 .header-content {
@@ -612,18 +637,31 @@ body {
 
 .results-grid {
     display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 16px;
+}
+
+.browse-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* ── Recipe Card ───────────────────────────────────────── */
 .recipe-card {
-    background: var(--color-card);
+    background: #ffffff;
     border-radius: var(--radius);
     padding: 20px;
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--color-border);
     transition: box-shadow 0.2s;
     cursor: pointer;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .recipe-card:hover {
@@ -635,6 +673,19 @@ body {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 8px;
+}
+
+.recipe-card {
+    background: #ffffff !important;
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border);
+    transition: box-shadow 0.2s;
+    cursor: pointer;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .recipe-card h3 {
@@ -830,40 +881,108 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 1000;
+    background: rgba(0, 0, 0, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
+    z-index: 1000;
 }
 
 .modal-content {
-    background: var(--color-card);
+    background: #ffffff;
     border-radius: var(--radius);
     padding: 28px;
-    max-width: 600px;
+    position: relative;
+    max-width: 700px;
     width: 100%;
     max-height: 85vh;
     overflow-y: auto;
-    position: relative;
     box-shadow: var(--shadow-lg);
+    border: 1px solid var(--color-border);
 }
 
 .modal-close {
     position: absolute;
     top: 12px;
     right: 16px;
-    background: none;
+    background: var(--color-primary);
     border: none;
-    font-size: 1.8rem;
+    font-size: 1.2rem;
     cursor: pointer;
-    color: var(--color-text-light);
+    color: white;
     line-height: 1;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    font-weight: 500;
 }
 
 .modal-close:hover {
-    color: var(--color-text);
+    background: var(--color-primary-dark);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    border: 1px solid #5a6268;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    border-color: #495057;
+}
+
+.btn-favorite {
+    background: #28a745;
+    color: white;
+    border: 1px solid #1e7e34;
+}
+
+.btn-favorite:hover {
+    background: #1e7e34;
+    border-color: #155724;
+}
+
+.btn-favorite.active {
+    background: #dc3545;
+    border-color: #c82333;
+}
+
+.btn-favorite.active:hover {
+    background: #c82333;
+    border-color: #bd2130;
+}
+
+.recipe-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+
+.star, .star-btn {
+    background: none;
+    border: none;
+    color: var(--color-star);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px;
+    margin: 0 2px;
+    transition: color 0.2s, transform 0.1s;
+}
+
+.star:hover, .star-btn:hover {
+    color: #f39c12;
+    transform: scale(1.1);
+}
+
+.star:active, .star-btn:active {
+    transform: scale(0.95);
 }
 
 /* ── Instructions in Modal ─────────────────────────────── */

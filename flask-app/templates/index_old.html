@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <h1>Smart Recipe Generator</h1>
+            <p>Find delicious recipes based on ingredients you have at home</p>
+            
+            <!-- Search Form -->
+            <div class="search-form">
+                <div class="input-group">
+                    <textarea id="ingredients-input" placeholder="Enter ingredients you have (one per line)&#10;e.g.,&#10;tomatoes&#10;pasta&#10;garlic&#10;onions" rows="4"></textarea>
+                    <button id="search-btn" class="btn btn-primary btn-large">Find Recipes</button>
+                </div>
+            </div>
+            
+            <!-- Image Upload -->
+            <div class="image-upload-section">
+                <div class="upload-container">
+                    <input type="file" id="image-upload" accept="image/*" style="display: none;">
+                    <button id="upload-btn" class="btn btn-secondary">📷 Upload Image</button>
+                    <div id="image-preview" class="image-preview" style="display: none;">
+                        <img id="preview-img" src="" alt="Uploaded image">
+                        <button id="remove-image" class="btn btn-small btn-danger">✕ Remove</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Results Section -->
+<section id="results-section" class="results-section" style="display:none;">
+    <div class="container">
+        <h2 id="results-heading">Top Matches</h2>
+        <p id="results-summary" class="results-summary"></p>
+        <div id="results-container" class="results-grid"></div>
+    </div>
+</section>
+
+<!-- Favorites Section -->
+<section id="favorites-section" class="favorites-section">
+    <div class="container">
+        <h2>⭐ Your Saved Favorites</h2>
+        <div id="favorites-container" class="results-grid"></div>
+    </div>
+</section>
+{% endblock %}
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            border: 4px solid transparent;
+            border-top-color: #f59e0b;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── Header ──────────────────────────────────────── -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-icon"><img src="static/images/logo.png" alt="Logo"></div>
+                    <div class="app-name">
+                        <h1 class="logo">FlavorFusion</h1>
+                    </div>
+                </div>
+                <div class="quick-search-section">
+                    <div class="quick-search">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="quick-search" placeholder="Quick search..." class="quick-search-input">
+                    </div>
+                    <div id="quick-search-results" class="quick-search-results"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ── Hero Introduction Section ────────────────────── -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h2 class="hero-title">Welcome to Smart Recipe Generator</h2>
+                <p class="hero-description">
+                    Transform your cooking experience with AI-powered recipe discovery.<br>
+                    Simply enter ingredients you have, and We'll Find delicious<br>
+                    recipes you can make right Now.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Main Search Section ─────────────────────────── -->
+    <main class="container">
+
+        <!-- Search Form -->
+        <section class="search-section" aria-label="Recipe Search">
+            <div class="card">
+                <h2 class="centered-heading">What's in your kitchen?</h2>
+                <h4 style="text-align: center;">Enter ingredients you have and we'll Find delicious<br>recipes you can make right Now. </h4>
+
+                <!-- Ingredient Input -->
+                <div class="form-group">
+                    <label for="ingredients-input">Enter ingredients (comma-separated): </label>
+                    <input
+                        type="text"
+                        id="ingredients-input"
+                        placeholder="e.g. chicken, rice, garlic, onion"
+                        autocomplete="off"
+                    >
+                    <small class="hint">Tip: Enter at least 2-3 ingredients for better results</small>
+                </div>
+
+                <!-- Image Upload (simulated) -->
+                <div class="form-group">
+                    <label for="image-upload">Or upload a photo of your ingredients:</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-grid">
+                    <div class="form-group">
+                        <label for="dietary-filter">Dietary Preference:</label>
+                        <select id="dietary-filter">
+                            <option value="">Any</option>
+                            <option value="regular">Regular</option>
+                            <option value="vegetarian">Vegetarian</option>
+                            <option value="vegan">Vegan</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="difficulty-filter">Max Difficulty:</label>
+                        <select id="difficulty-filter">
+                            <option value="">Any</option>
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="time-filter">Max Cook Time (min):</label>
+                        <input type="number" id="time-filter" placeholder="e.g. 30" min="5" max="180">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="servings-input">Adjust Servings:</label>
+                        <input type="number" id="servings-input" placeholder="e.g. 4" min="1" max="12">
+                    </div>
+                </div>
+
+                <!-- Search Button -->
+                <button id="search-btn" class="btn btn-primary" onclick="searchRecipes()">
+                    🔍 Find Recipes
+                </button>
+            </div>
+        </section>
+
+        <!-- Loading Spinner -->
+        <div id="loading" class="loading" style="display:none;">
+            <div class="spinner"></div>
+            <p>Searching for matching recipes...</p>
+        </div>
+
+        <!-- Error Display -->
+        <div id="error-message" class="error-message" style="display:none;"></div>
+
+        <!-- Browse All Recipes Section -->
+        <section id="browse-section" class="browse-section">
+            <h2 class="browse-header">📖 Browse All Recipes</h2>
+            <div class="browse-controls">
+                <div class="form-group">
+                    <label for="sort-select">Sort by:</label>
+                    <select id="sort-select" onchange="loadAllRecipes()">
+                        <option value="name">Name</option>
+                        <option value="cook_time">Cook Time</option>
+                        <option value="difficulty">Difficulty</option>
+                        <option value="rating">Rating</option>
+                        <option value="cuisine">Cuisine</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="browse-filter">Filter by cuisine:</label>
+                    <select id="browse-filter" onchange="loadAllRecipes()">
+                        <option value="">All Cuisines</option>
+                        <option value="Italian">Italian</option>
+                        <option value="Asian">Asian</option>
+                        <option value="Indian">Indian</option>
+                        <option value="American">American</option>
+                        <option value="Mexican">Mexican</option>
+                        <option value="Thai">Thai</option>
+                        <option value="Middle Eastern">Middle Eastern</option>
+                        <option value="French">French</option>
+                        <option value="British">British</option>
+                        <option value="Greek">Greek</option>
+                        <option value="Chinese">Chinese</option>
+                    </select>
+                </div>
+            </div>
+            <div id="browse-container" class="results-grid"></div>
+            <div id="browse-loading" class="loading" style="display:none;">
+                <div class="spinner"></div>
+                <p>Loading recipes...</p>
+            </div>
+        </section>
+
+        
+        <!-- Results Section -->
+        <section id="results-section" class="results-section" style="display:none;">
+            <h2 id="results-heading">Top Matches</h2>
+            <p id="results-summary" class="results-summary"></p>
+            <div id="results-container" class="results-grid"></div>
+        </section>
+
+        <!-- Favorites Section -->
+        <section id="favorites-section" class="favorites-section">
+            <h2>⭐ Your Saved Favorites</h2>
+            <div id="favorites-container" class="results-grid">
+                <p class="empty-state">No favorites saved yet. Search for recipes and save the ones you love!</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ── Footer ──────────────────────────────────────── -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Smart Recipe Generator — Built by Rishabh Shan</p>
+            <p>Contact: <a href="mailto:rishabhshan7@gmail.com">rishabhshan7@gmail.com</a></p>
+        </div>
+    </footer>
+
+    <!-- ── Recipe Detail Modal ─────────────────────────── -->
+    <div id="recipe-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">Back</button>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

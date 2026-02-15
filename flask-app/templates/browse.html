@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Browse Section -->
+<section class="browse-section">
+    <div class="container">
+        <h1>📚 Browse All Recipes</h1>
+        <p>Discover our complete collection of delicious recipes from around the world</p>
+        
+        <!-- Sort and Filter Controls -->
+        <div class="browse-controls">
+            <div class="control-group">
+                <label for="sort-select">Sort by:</label>
+                <select id="sort-select" onchange="loadAllRecipes()">
+                    <option value="name">Name</option>
+                    <option value="cook_time">Cook Time</option>
+                    <option value="difficulty">Difficulty</option>
+                    <option value="rating">Rating</option>
+                    <option value="cuisine">Cuisine</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="browse-filter">Filter by cuisine:</label>
+                <select id="browse-filter" onchange="loadAllRecipes()">
+                    <option value="">All cuisines</option>
+                    <option value="Italian">Italian</option>
+                    <option value="Asian">Asian</option>
+                    <option value="Indian">Indian</option>
+                    <option value="Mexican">Mexican</option>
+                    <option value="Thai">Thai</option>
+                    <option value="Middle Eastern">Middle Eastern</option>
+                    <option value="French">French</option>
+                    <option value="British">British</option>
+                    <option value="Greek">Greek</option>
+                    <option value="Chinese">Chinese</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Loading State -->
+        <div id="browse-loading" class="loading" style="display:none;">
+            <div class="spinner"></div>
+            <p>Loading recipes...</p>
+        </div>
+        
+        <!-- Recipe Grid -->
+        <div id="browse-container" class="results-grid"></div>
+    </div>
+</section>
+
+<!-- Recipe Detail Modal -->
+<div id="recipe-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal()">Back</button>
+        <div id="modal-body"></div>
+    </div>
+</div>
+{% endblock %}

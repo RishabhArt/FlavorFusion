@@ -15,6 +15,14 @@ import os
 app = Flask(__name__)
 DATABASE = os.path.join(os.path.dirname(__file__), 'recipes.db')
 
+# ── Database Initialization ────────────────────────────────
+def init_db():
+    """Initialize the database if it doesn't exist."""
+    if not os.path.exists(DATABASE):
+        print("Database not found. Creating new database...")
+        from database import create_database
+        create_database()
+
 
 # ── Database Helper ────────────────────────────────────────
 # We use a helper function to get a fresh connection each time.
@@ -32,6 +40,16 @@ def get_db():
 def index():
     """Serve the main single-page application."""
     return render_template('index.html')
+
+@app.route('/browse')
+def browse():
+    """Serve the browse recipes page."""
+    return render_template('browse.html')
+
+@app.route('/favicon.ico')
+def favicon():
+    """Return favicon to avoid 404 errors."""
+    return '', 204
 
 
 @app.route('/api/recipes', methods=['GET'])
@@ -264,9 +282,6 @@ def server_error(e):
 
 # ── Entry Point ────────────────────────────────────────────
 if __name__ == '__main__':
-    # Initialize database if it doesn't exist yet
-    if not os.path.exists(DATABASE):
-        print("Database not found. Run 'python database.py' first to create it.")
-    else:
-        # Debug mode is on for development; turn off in production
-        app.run(debug=True, host='0.0.0.0', port=5000)
+    # Initialize database before starting the app
+    init_db()
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)

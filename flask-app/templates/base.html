@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Recipe Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo">🍳</div>
+                    <div class="app-name">Smart Recipe Generator</div>
+                </div>
+                
+                <!-- Navigation Links -->
+                <nav class="nav-links">
+                    <a href="/" class="nav-link">Home</a>
+                    <a href="/browse" class="nav-link">Browse</a>
+                    <a href="#favorites" class="nav-link">Favorites</a>
+                </nav>
+                
+                <!-- Quick Search -->
+                <div class="quick-search-section">
+                    <div class="quick-search-container">
+                        <input type="text" id="quick-search" placeholder="Quick search recipes..." autocomplete="off">
+                        <div id="quick-search-results" class="quick-search-results"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Smart Recipe Generator — Built by Rishabh Shan</p>
+            <p>Contact: <a href="mailto:rishabhshan7@gmail.com">rishabhshan7@gmail.com</a></p>
+        </div>
+    </footer>
+
+    <!-- Error Message -->
+    <div id="error-message" class="error-message" style="display:none;"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

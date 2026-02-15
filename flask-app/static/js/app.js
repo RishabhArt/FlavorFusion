@@ -20,8 +20,13 @@ document.addEventListener('DOMContentLoaded', function() {
     favorites = JSON.parse(localStorage.getItem('recipeFavorites')) || [];
     savedRecipes = JSON.parse(localStorage.getItem('savedRecipes')) || [];
     
-    // Load all recipes for browse section
-    loadAllRecipes();
+    // Check if we're on the browse page
+    if (window.location.pathname === '/browse') {
+        loadAllRecipes();
+    }
+    
+    // Load favorites
+    loadFavorites();
     
     // Add event listeners
     document.getElementById('search-btn').addEventListener('click', searchRecipes);
@@ -351,17 +356,11 @@ function buildRecipeCard(recipe, showScore) {
 
     // Action buttons (stop click propagation so card click doesn't fire)
     card += '<div class="recipe-actions" onclick="event.stopPropagation()">';
-    card += '<button class="btn btn-favorite ' + (isFavorite ? 'active' : '') + '" onclick="toggleFavorite(' + recipe.id + ', this)">';
-    card += (isFavorite ? '★ Saved' : '☆ Save');
+    card += '<button class="btn btn-primary btn-small" onclick="showRecipeDetails(' + recipe.id + ')">View Recipe</button>';
+    card += '<button class="btn btn-secondary btn-small btn-favorite" onclick="toggleFavorite(' + recipe.id + ', this)">';
+    card += (isFavorite ? 'Saved' : 'Save');
     card += '</button>';
-    card += '<div class="rating-input">';
-    for (var i = 1; i <= 5; i++) {
-        card += '<button class="star" onclick="rateRecipe(' + recipe.id + ', ' + i + ', this)" title="Rate ' + i + '">';
-        card += i <= Math.round(recipe.rating) ? '★' : '☆';
-        card += '</button>';
-    }
-    card += '</div>';
-    card += '<button class="btn btn-secondary" onclick="showSubstitutions(' + recipe.id + ')">Substitutions</button>';
+    card += '<button class="btn btn-secondary btn-small" onclick="showSubstitutions(' + recipe.id + ')">Substitutions</button>';
     card += '</div>';
 
     card += '</div>';
@@ -455,6 +454,89 @@ function openRecipeDetail(recipeId, event) {
 }
 
 
+// ── Show Recipe Details ───────────────────────────────────
+function showRecipeDetails(recipeId) {
+    fetch('/api/recipes')
+    .then(function(res) { return res.json(); })
+    .then(function(recipes) {
+        const recipe = recipes.find(r => r.id == recipeId);
+        if (!recipe) {
+            showError('Recipe not found.');
+            return;
+        }
+        
+        // Build detailed recipe HTML
+        var html = '<div class="recipe-details">';
+        html += '<h2>' + escapeHtml(recipe.name) + '</h2>';
+        
+        // Recipe meta info
+        html += '<div class="recipe-meta">';
+        html += '<span class="meta-tag">⏱ ' + recipe.cook_time + ' min</span>';
+        html += '<span class="meta-tag difficulty-' + recipe.difficulty + '">' + capitalize(recipe.difficulty) + '</span>';
+        html += '<span class="meta-tag">' + capitalize(recipe.dietary) + '</span>';
+        if (recipe.cuisine) {
+            html += '<span class="meta-tag">' + escapeHtml(recipe.cuisine) + '</span>';
+        }
+        html += '<span class="meta-tag">🍽 ' + recipe.servings + ' servings</span>';
+        html += '</div>';
+        
+        // Ingredients list
+        html += '<h3 style="margin-bottom:8px">Ingredients</h3>';
+        html += '<ul style="margin-bottom:16px;padding-left:20px">';
+        recipe.ingredients.forEach(function(ing) {
+            html += '<li>' + escapeHtml(ing) + '</li>';
+        });
+        html += '</ul>';
+        
+        // Instructions
+        html += '<h3 style="margin-bottom:8px">Instructions</h3>';
+        var steps = recipe.instructions.split('\n').filter(function(s) { return s.trim(); });
+        html += '<ol class="instructions-list">';
+        steps.forEach(function(step) {
+            var text = step.replace(/^\d+\.\s*/, '');
+            html += '<li>' + escapeHtml(text) + '</li>';
+        });
+        html += '</ol>';
+        
+        // Nutrition
+        html += '<h3 style="margin:16px 0 8px">Nutrition (per serving)</h3>';
+        html += '<div class="nutrition-grid">';
+        var nutritionLabels = {
+            calories: 'Calories',
+            protein: 'Protein (g)',
+            carbs: 'Carbs (g)',
+            fat: 'Fat (g)',
+            fiber: 'Fiber (g)'
+        };
+        for (var key in recipe.nutrition) {
+            html += '<div class="nutrition-item">';
+            html += '<div class="value">' + recipe.nutrition[key] + '</div>';
+            html += '<div class="label">' + (nutritionLabels[key] || key) + '</div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        
+        // Rating section
+        html += '<div class="rating-section">';
+        html += '<h3>Rate this Recipe</h3>';
+        html += '<div class="rating-display">' + renderStars(recipe.rating) + ' (' + recipe.rating_count + ')</div>';
+        html += '<div class="rating-input">';
+        for (var i = 1; i <= 5; i++) {
+            html += '<button class="star-btn" data-rating="' + i + '" onclick="rateRecipe(' + recipeId + ', ' + i + ', this)">' + (i <= Math.round(recipe.rating) ? '★' : '☆') + '</button>';
+        }
+        html += '</div>';
+        html += '</div>';
+        
+        // Close button
+        html += '<button class="btn btn-primary" onclick="closeModal()">Close</button>';
+        html += '</div>';
+        
+        // Show in modal
+        document.getElementById('modal-body').innerHTML = html;
+        document.getElementById('recipe-modal').style.display = 'flex';
+    });
+}
+
 // ── Close Modal ───────────────────────────────────────────
 function closeModal() {
     document.getElementById('recipe-modal').style.display = 'none';
@@ -521,7 +603,32 @@ function loadFavorites() {
 
         var html = '';
         favoriteRecipes.forEach(function(recipe) {
-            html += buildRecipeCard(recipe, false);
+            html += `
+                <div class="recipe-card" data-recipe-id="${recipe.id}">
+                    <div class="recipe-header">
+                        <h3>${recipe.name}</h3>
+                        <div class="recipe-meta">
+                            <span class="cuisine">${recipe.cuisine}</span>
+                            <span class="time">${recipe.cook_time} min</span>
+                            <span class="difficulty">${recipe.difficulty}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-rating">
+                        <span class="stars">${'⭐'.repeat(Math.round(recipe.rating))}</span>
+                        <small>${recipe.rating.toFixed(1)} (${recipe.rating_count} reviews)</small>
+                    </div>
+                    
+                    <div class="recipe-actions" onclick="event.stopPropagation()">
+                        <button class="btn btn-primary btn-small" onclick="showRecipeDetails(${recipe.id})">
+                            View Recipe
+                        </button>
+                        <button class="btn btn-secondary btn-small btn-favorite" onclick="toggleFavorite(${recipe.id}, this)">
+                            ${isFavorite(recipe.id) ? 'Saved' : 'Save'}
+                        </button>
+                    </div>
+                </div>
+            `;
         });
         container.innerHTML = html;
     })
@@ -557,18 +664,17 @@ function rateRecipe(recipeId, rating, starEl) {
 
         // Update the star display for this rating group
         var ratingGroup = starEl.parentElement;
-        var stars = ratingGroup.querySelectorAll('.star');
+        var stars = ratingGroup.querySelectorAll('.star, .star-btn');
         stars.forEach(function(star, index) {
             star.textContent = index < rating ? '★' : '☆';
-            if (index < rating) {
-                star.classList.add('active');
-            } else {
-                star.classList.remove('active');
-            }
         });
+
+        // Show success message
+        showError('Rating saved successfully!');
+        setTimeout(function() { hideError(); }, 2000);
     })
     .catch(function() {
-        showError('Failed to save rating. Please try again.');
+        showError('Could not save rating.');
     });
 }
 
@@ -626,6 +732,11 @@ function showError(message) {
 // Hide the error message
 function hideError() {
     document.getElementById('error-message').style.display = 'none';
+}
+
+// Check if recipe is in favorites
+function isFavorite(recipeId) {
+    return favorites.includes(recipeId);
 }
 
 // Render star icons for a rating value
@@ -781,16 +892,23 @@ function loadAllRecipes() {
     const sortBy = document.getElementById('sort-select').value;
     const cuisineFilter = document.getElementById('browse-filter').value;
     
+    console.log('Loading recipes with sort:', sortBy, 'filter:', cuisineFilter);
+    
     // Show loading
     document.getElementById('browse-loading').style.display = 'block';
     document.getElementById('browse-container').innerHTML = '';
     
     fetch('/api/recipes')
     .then(function(response) {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
         return response.json();
     })
     .then(function(recipes) {
         console.log('Loaded recipes:', recipes.length);
+        console.log('First recipe:', recipes[0]);
         
         // Filter by cuisine
         let filteredRecipes = recipes;
@@ -869,12 +987,12 @@ function displayBrowseRecipes(recipes) {
                     <small>${recipe.rating.toFixed(1)} (${recipe.rating_count} reviews)</small>
                 </div>
                 
-                <div class="recipe-actions">
-                    <button class="btn btn-small" onclick="showRecipeDetails(${recipe.id})">
+                <div class="recipe-actions" onclick="event.stopPropagation()">
+                    <button class="btn btn-primary btn-small" onclick="showRecipeDetails(${recipe.id})">
                         View Recipe
                     </button>
-                    <button class="btn btn-small btn-favorite" onclick="toggleFavorite(${recipe.id})">
-                        ${isFavorite(recipe.id) ? '❤️' : '🤍'}
+                    <button class="btn btn-secondary btn-small btn-favorite" onclick="toggleFavorite(${recipe.id}, this)">
+                        ${isFavorite(recipe.id) ? 'Saved' : 'Save'}
                     </button>
                 </div>
             </div>
@@ -972,8 +1090,3 @@ function generateRecipeSuggestions(recipes, preferences) {
 }
 
 // ── Initialize ────────────────────────────────────────────
-// Load favorites and suggestions on page load
-document.addEventListener('DOMContentLoaded', function() {
-    loadFavorites();
-    loadSuggestions();
-});
