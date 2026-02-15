@@ -785,11 +785,17 @@ function loadAllRecipes() {
     const cuisineFilter = document.getElementById('browse-filter').value;
     
     // Show loading state
-    document.getElementById('browse-loading').style.display = 'block';
-    document.getElementById('browse-container').innerHTML = '';
+    const loadingEl = document.getElementById('browse-loading');
+    const containerEl = document.getElementById('browse-container');
+    
+    if (loadingEl) loadingEl.style.display = 'block';
+    if (containerEl) containerEl.innerHTML = '';
     
     fetch('/api/recipes')
-    .then(function(res) { return res.json(); })
+    .then(function(res) { 
+        if (!res.ok) throw new Error('Network response was not ok');
+        return res.json(); 
+    })
     .then(function(recipes) {
         // Filter by cuisine if selected
         let filteredRecipes = recipes;
@@ -820,11 +826,14 @@ function loadAllRecipes() {
         
         // Display recipes
         displayBrowseRecipes(filteredRecipes);
-        document.getElementById('browse-loading').style.display = 'none';
+        if (loadingEl) loadingEl.style.display = 'none';
     })
-    .catch(function() {
-        document.getElementById('browse-loading').style.display = 'none';
-        showError('Failed to load recipes.');
+    .catch(function(error) {
+        console.error('Load error:', error);
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (containerEl) {
+            containerEl.innerHTML = '<div class="error-message">Failed to load recipes. Please try again.</div>';
+        }
     });
 }
 
@@ -877,13 +886,23 @@ function loadSuggestions() {
     // Get user's rating history from localStorage
     const ratingHistory = JSON.parse(localStorage.getItem('ratingHistory') || '[]');
     
+    // Always show suggestions section
+    document.getElementById('suggestions-section').style.display = 'block';
+    
     if (ratingHistory.length === 0) {
-        document.getElementById('suggestions-section').style.display = 'none';
+        // Show default message for new users
+        const container = document.getElementById('suggestions-container');
+        container.innerHTML = '<p class="suggestions-intro">Rate some recipes to get personalized recommendations! In the meantime, here are some popular recipes:</p>';
+        
+        // Load top rated recipes as default suggestions
+        fetch('/api/recipes')
+        .then(function(res) { return res.json(); })
+        .then(function(recipes) {
+            const topRecipes = recipes.sort((a, b) => b.rating - a.rating).slice(0, 3);
+            displaySuggestions(topRecipes);
+        });
         return;
     }
-    
-    // Show suggestions section
-    document.getElementById('suggestions-section').style.display = 'block';
     
     // Load all recipes to suggest from
     fetch('/api/recipes')
