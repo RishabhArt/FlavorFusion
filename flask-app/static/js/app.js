@@ -23,9 +23,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load all recipes for browse section
     loadAllRecipes();
     
-    // Load suggestions based on user ratings
-    loadSuggestions();
-    
     // Add event listeners
     document.getElementById('search-btn').addEventListener('click', searchRecipes);
     document.getElementById('ingredients-input').addEventListener('keypress', function(e) {
@@ -784,26 +781,26 @@ function loadAllRecipes() {
     const sortBy = document.getElementById('sort-select').value;
     const cuisineFilter = document.getElementById('browse-filter').value;
     
-    // Show loading state
-    const loadingEl = document.getElementById('browse-loading');
-    const containerEl = document.getElementById('browse-container');
-    
-    if (loadingEl) loadingEl.style.display = 'block';
-    if (containerEl) containerEl.innerHTML = '';
+    // Show loading
+    document.getElementById('browse-loading').style.display = 'block';
+    document.getElementById('browse-container').innerHTML = '';
     
     fetch('/api/recipes')
-    .then(function(res) { 
-        if (!res.ok) throw new Error('Network response was not ok');
-        return res.json(); 
+    .then(function(response) {
+        return response.json();
     })
     .then(function(recipes) {
-        // Filter by cuisine if selected
+        console.log('Loaded recipes:', recipes.length);
+        
+        // Filter by cuisine
         let filteredRecipes = recipes;
-        if (cuisineFilter) {
+        if (cuisineFilter && cuisineFilter !== '') {
             filteredRecipes = recipes.filter(function(r) {
                 return r.cuisine === cuisineFilter;
             });
         }
+        
+        console.log('Filtered recipes:', filteredRecipes.length);
         
         // Sort recipes
         filteredRecipes.sort(function(a, b) {
@@ -826,14 +823,13 @@ function loadAllRecipes() {
         
         // Display recipes
         displayBrowseRecipes(filteredRecipes);
-        if (loadingEl) loadingEl.style.display = 'none';
+        document.getElementById('browse-loading').style.display = 'none';
     })
     .catch(function(error) {
-        console.error('Load error:', error);
-        if (loadingEl) loadingEl.style.display = 'none';
-        if (containerEl) {
-            containerEl.innerHTML = '<div class="error-message">Failed to load recipes. Please try again.</div>';
-        }
+        console.error('Error loading recipes:', error);
+        document.getElementById('browse-loading').style.display = 'none';
+        document.getElementById('browse-container').innerHTML = 
+            '<div class="error-message">Failed to load recipes. Please refresh the page.</div>';
     });
 }
 
@@ -855,128 +851,38 @@ function displayBrowseRecipes(recipes) {
         return;
     }
     
-    const recipesHTML = recipes.map(recipe => `
-        <div class="recipe-card" data-recipe-id="${recipe.id}">
-            <div class="recipe-header">
-                <h3>${recipe.name}</h3>
-                <div class="recipe-meta">
-                    <span class="cuisine">${recipe.cuisine}</span>
-                    <span class="time">${recipe.cook_time} min</span>
-                    <span class="difficulty">${recipe.difficulty}</span>
+    let html = '';
+    recipes.forEach(function(recipe) {
+        html += `
+            <div class="recipe-card" data-recipe-id="${recipe.id}">
+                <div class="recipe-header">
+                    <h3>${recipe.name}</h3>
+                    <div class="recipe-meta">
+                        <span class="cuisine">${recipe.cuisine}</span>
+                        <span class="time">${recipe.cook_time} min</span>
+                        <span class="difficulty">${recipe.difficulty}</span>
+                    </div>
+                </div>
+                
+                <div class="recipe-rating">
+                    <span class="stars">${'⭐'.repeat(Math.round(recipe.rating))}</span>
+                    <small>${recipe.rating.toFixed(1)} (${recipe.rating_count} reviews)</small>
+                </div>
+                
+                <div class="recipe-actions">
+                    <button class="btn btn-small" onclick="showRecipeDetails(${recipe.id})">
+                        View Recipe
+                    </button>
+                    <button class="btn btn-small btn-favorite" onclick="toggleFavorite(${recipe.id})">
+                        ${isFavorite(recipe.id) ? '❤️' : '🤍'}
+                    </button>
                 </div>
             </div>
-            
-            <div class="recipe-rating">
-                <span class="stars">${'⭐'.repeat(Math.round(recipe.rating))}</span>
-                <small>${recipe.rating.toFixed(1)} (${recipe.rating_count} reviews)</small>
-            </div>
-            
-            <div class="recipe-actions">
-                <button class="btn btn-small" onclick="showRecipeDetails(${recipe.id})">
-                    View Recipe
-                </button>
-                <button class="btn btn-small btn-favorite" onclick="toggleFavorite(${recipe.id})">
-                    ${isFavorite(recipe.id) ? '❤️' : '🤍'}
-                </button>
-            </div>
-        </div>
-    `).join('');
-    
-    container.innerHTML = `<div class="results-grid">${recipesHTML}</div>`;
-    console.log('Displayed', recipes.length, 'recipes in browse section');
-}
-
-// ── Load Recipe Suggestions ───────────────────────────────
-// Generates recipe suggestions based on user ratings and preferences
-function loadSuggestions() {
-    // Get user's rating history from localStorage
-    const ratingHistory = JSON.parse(localStorage.getItem('ratingHistory') || '[]');
-    
-    // Always show suggestions section
-    document.getElementById('suggestions-section').style.display = 'block';
-    
-    if (ratingHistory.length === 0) {
-        // Show default message for new users
-        const container = document.getElementById('suggestions-container');
-        container.innerHTML = '<p class="suggestions-intro">Rate some recipes to get personalized recommendations! In the meantime, here are some popular recipes:</p>';
-        
-        // Load top rated recipes as default suggestions
-        fetch('/api/recipes')
-        .then(function(res) { return res.json(); })
-        .then(function(recipes) {
-            const topRecipes = recipes.sort((a, b) => b.rating - a.rating).slice(0, 3);
-            displaySuggestions(topRecipes);
-        });
-        return;
-    }
-    
-    // Load all recipes to suggest from
-    fetch('/api/recipes')
-    .then(function(res) { return res.json(); })
-    .then(function(recipes) {
-        // Get highly rated cuisines from user history
-        const highRatedRecipes = ratingHistory.filter(r => r.rating >= 4);
-        const preferredCuisines = [...new Set(highRatedRecipes.map(r => r.cuisine))];
-        
-        // Filter recipes by preferred cuisines
-        let suggestedRecipes = recipes;
-        if (preferredCuisines.length > 0) {
-            suggestedRecipes = recipes.filter(r => preferredCuisines.includes(r.cuisine));
-        }
-        
-        // Sort by rating and limit to 3 suggestions
-        suggestedRecipes.sort((a, b) => b.rating - a.rating);
-        suggestedRecipes = suggestedRecipes.slice(0, 3);
-        
-        displaySuggestions(suggestedRecipes);
-    })
-    .catch(function() {
-        console.error('Failed to load suggestions');
+        `;
     });
-}
-
-function displaySuggestions(recipes) {
-    const container = document.getElementById('suggestions-container');
     
-    if (!container) {
-        console.error('Suggestions container not found');
-        return;
-    }
-    
-    if (recipes.length === 0) {
-        container.innerHTML = '<p>No suggestions available yet. Rate some recipes to get personalized recommendations!</p>';
-        return;
-    }
-    
-    const suggestionsHTML = recipes.map(recipe => `
-        <div class="recipe-card" data-recipe-id="${recipe.id}">
-            <div class="recipe-header">
-                <h3>${recipe.name}</h3>
-                <div class="recipe-meta">
-                    <span class="cuisine">${recipe.cuisine}</span>
-                    <span class="time">${recipe.cook_time} min</span>
-                    <span class="difficulty">${recipe.difficulty}</span>
-                </div>
-            </div>
-            
-            <div class="recipe-rating">
-                <span class="stars">${'⭐'.repeat(Math.round(recipe.rating))}</span>
-                <small>${recipe.rating.toFixed(1)} (${recipe.rating_count} reviews)</small>
-            </div>
-            
-            <div class="recipe-actions">
-                <button class="btn btn-small" onclick="showRecipeDetails(${recipe.id})">
-                    View Recipe
-                </button>
-                <button class="btn btn-small btn-favorite" onclick="toggleFavorite(${recipe.id})">
-                    ${isFavorite(recipe.id) ? '❤️' : '🤍'}
-                </button>
-            </div>
-        </div>
-    `).join('');
-    
-    container.innerHTML = `<div class="results-grid">${suggestionsHTML}</div>`;
-    console.log('Displayed', recipes.length, 'suggestions');
+    container.innerHTML = html;
+    console.log('Displayed', recipes.length, 'recipes in browse section');
 }
 
 // ── Analyze User Preferences ───────────────────────────────
