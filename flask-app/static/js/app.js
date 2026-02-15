@@ -14,6 +14,51 @@ let favorites = JSON.parse(localStorage.getItem('recipeFavorites')) || [];
 // We use localStorage to persist saved recipes across sessions.
 let savedRecipes = JSON.parse(localStorage.getItem('savedRecipes')) || [];
 
+// ── Initialize on Page Load ───────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+    // Load favorites and saved recipes from localStorage
+    favorites = JSON.parse(localStorage.getItem('recipeFavorites')) || [];
+    savedRecipes = JSON.parse(localStorage.getItem('savedRecipes')) || [];
+    
+    // Load all recipes for browse section
+    loadAllRecipes();
+    
+    // Add event listeners
+    document.getElementById('search-btn').addEventListener('click', searchRecipes);
+    document.getElementById('ingredients-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') searchRecipes();
+    });
+    
+    // Quick search functionality
+    const quickSearchInput = document.getElementById('quick-search');
+    const quickSearchResults = document.getElementById('quick-search-results');
+    
+    quickSearchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        if (query.length > 0) {
+            performQuickSearch(query);
+        } else {
+            hideQuickSearchResults();
+        }
+    });
+    
+    quickSearchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const selected = document.querySelector('.quick-search-item.selected');
+            if (selected) {
+                selected.click();
+            }
+        }
+    });
+    
+    // Hide quick search results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!quickSearchInput.contains(e.target) && !quickSearchResults.contains(e.target)) {
+            hideQuickSearchResults();
+        }
+    });
+});
 
 // ── Image Upload Handler ──────────────────────────────────
 // Real ingredient detection from an uploaded image using Google Vision API.
@@ -728,6 +773,99 @@ function showSavedRecipes() {
         document.getElementById('browse-loading').style.display = 'none';
         showError('Failed to load recipes.');
     });
+}
+
+// ── Load All Recipes ───────────────────────────────────────
+// Loads and displays all recipes with sorting and filtering
+function loadAllRecipes() {
+    const sortBy = document.getElementById('sort-select').value;
+    const cuisineFilter = document.getElementById('browse-filter').value;
+    
+    // Show loading state
+    document.getElementById('browse-loading').style.display = 'block';
+    document.getElementById('browse-container').innerHTML = '';
+    
+    fetch('/api/recipes')
+    .then(function(res) { return res.json(); })
+    .then(function(recipes) {
+        // Filter by cuisine if selected
+        let filteredRecipes = recipes;
+        if (cuisineFilter) {
+            filteredRecipes = recipes.filter(function(r) {
+                return r.cuisine === cuisineFilter;
+            });
+        }
+        
+        // Sort recipes
+        filteredRecipes.sort(function(a, b) {
+            switch(sortBy) {
+                case 'name':
+                    return a.name.localeCompare(b.name);
+                case 'cook_time':
+                    return a.cook_time - b.cook_time;
+                case 'difficulty':
+                    const difficultyOrder = {'easy': 1, 'medium': 2, 'hard': 3};
+                    return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
+                case 'rating':
+                    return b.rating - a.rating;
+                case 'cuisine':
+                    return a.cuisine.localeCompare(b.cuisine);
+                default:
+                    return 0;
+            }
+        });
+        
+        // Display recipes
+        displayBrowseRecipes(filteredRecipes);
+        document.getElementById('browse-loading').style.display = 'none';
+    })
+    .catch(function() {
+        document.getElementById('browse-loading').style.display = 'none';
+        showError('Failed to load recipes.');
+    });
+}
+
+function displayBrowseRecipes(recipes) {
+    const container = document.getElementById('browse-container');
+    
+    if (recipes.length === 0) {
+        container.innerHTML = `
+            <div class="no-results">
+                <h3>No recipes found</h3>
+                <p>Try adjusting your filters.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const recipesHTML = recipes.map(recipe => `
+        <div class="recipe-card" data-recipe-id="${recipe.id}">
+            <div class="recipe-header">
+                <h3>${recipe.name}</h3>
+                <div class="recipe-meta">
+                    <span class="cuisine">${recipe.cuisine}</span>
+                    <span class="time">${recipe.cook_time} min</span>
+                    <span class="difficulty">${recipe.difficulty}</span>
+                </div>
+            </div>
+            
+            <div class="recipe-rating">
+                <span class="stars">${'⭐'.repeat(Math.round(recipe.rating))}</span>
+                <small>${recipe.rating.toFixed(1)} (${recipe.rating_count} reviews)</small>
+            </div>
+            
+            <div class="recipe-actions">
+                <button class="btn btn-small" onclick="showRecipeDetails(${recipe.id})">
+                    View Recipe
+                </button>
+                <button class="btn btn-small btn-favorite" onclick="toggleFavorite(${recipe.id})">
+                    ${isFavorite(recipe.id) ? '❤️' : '🤍'}
+                </button>
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = `<div class="results-grid">${recipesHTML}</div>`;
 }
 
 // ── Load Recipe Suggestions ───────────────────────────────

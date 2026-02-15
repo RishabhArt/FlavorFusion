@@ -1,8 +1,10 @@
+ctrl+shift+p(for command palette)
+
 # Smart Recipe Generator
 
 A Flask web application that matches user ingredients to recipes using an intelligent scoring algorithm.
 
-## Project Summary 
+## Project Summary
 
 The Smart Recipe Generator is a full-stack web application that solves a common kitchen problem: "What can I cook with what I have?" Users enter their available ingredients, and the system matches them against a database of 20 recipes using a percentage-based scoring algorithm. The matching works by comparing each user ingredient against recipe ingredients using substring matching (so "chicken" matches "chicken breast"), then calculating a score as the ratio of matched ingredients to total required ingredients.
 
@@ -33,7 +35,9 @@ Additional features include a 5-star rating system with running average calculat
 The recipe matching follows a simple 3-step process:
 
 ### Step 1: Filter
+
 Before any scoring, we eliminate recipes that don't match the user's constraints:
+
 - **Dietary**: If user selects "vegan", only vegan recipes pass through
 - **Difficulty**: If user selects "easy", medium and hard recipes are removed
 - **Cook time**: Recipes exceeding the max time are filtered out
@@ -41,6 +45,7 @@ Before any scoring, we eliminate recipes that don't match the user's constraints
 This is more efficient than scoring everything and filtering later.
 
 ### Step 2: Score
+
 For each remaining recipe, we calculate a match percentage:
 
 ```
@@ -50,7 +55,9 @@ match_score = (matched_ingredients / total_recipe_ingredients) × 100
 We use **substring matching** so "tomato" matches "canned tomatoes" and "chicken" matches "chicken breast". This makes the system more forgiving than exact matching.
 
 ### Step 3: Rank
+
 Results are sorted by score (highest first) and we return the top 5 matches. Each result includes:
+
 - Match percentage with visual bar
 - Count of matched vs. total ingredients
 - List of missing ingredients
@@ -92,4 +99,3 @@ flask-app/
 ## License
 
 MIT License - feel free to use for personal or commercial projects.
-
