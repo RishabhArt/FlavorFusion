@@ -840,6 +840,11 @@ function loadAllRecipes() {
 function displayBrowseRecipes(recipes) {
     const container = document.getElementById('browse-container');
     
+    if (!container) {
+        console.error('Browse container not found');
+        return;
+    }
+    
     if (recipes.length === 0) {
         container.innerHTML = `
             <div class="no-results">
@@ -877,7 +882,8 @@ function displayBrowseRecipes(recipes) {
         </div>
     `).join('');
     
-    container.innerHTML = recipesHTML;
+    container.innerHTML = `<div class="results-grid">${recipesHTML}</div>`;
+    console.log('Displayed', recipes.length, 'recipes in browse section');
 }
 
 // ── Load Recipe Suggestions ───────────────────────────────
@@ -932,6 +938,11 @@ function loadSuggestions() {
 function displaySuggestions(recipes) {
     const container = document.getElementById('suggestions-container');
     
+    if (!container) {
+        console.error('Suggestions container not found');
+        return;
+    }
+    
     if (recipes.length === 0) {
         container.innerHTML = '<p>No suggestions available yet. Rate some recipes to get personalized recommendations!</p>';
         return;
@@ -964,7 +975,8 @@ function displaySuggestions(recipes) {
         </div>
     `).join('');
     
-    container.innerHTML = suggestionsHTML;
+    container.innerHTML = `<div class="results-grid">${suggestionsHTML}</div>`;
+    console.log('Displayed', recipes.length, 'suggestions');
 }
 
 // ── Analyze User Preferences ───────────────────────────────
