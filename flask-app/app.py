@@ -41,11 +41,6 @@ def index():
     """Serve the main single-page application."""
     return render_template('index.html')
 
-@app.route('/browse')
-def browse():
-    """Serve the browse recipes page."""
-    return render_template('browse.html')
-
 @app.route('/favicon.ico')
 def favicon():
     """Return favicon to avoid 404 errors."""

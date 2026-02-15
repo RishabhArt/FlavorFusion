@@ -20,10 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
     favorites = JSON.parse(localStorage.getItem('recipeFavorites')) || [];
     savedRecipes = JSON.parse(localStorage.getItem('savedRecipes')) || [];
     
-    // Check if we're on the browse page
-    if (window.location.pathname === '/browse') {
-        loadAllRecipes();
-    }
+    // Load all recipes for browse section
+    loadAllRecipes();
     
     // Load favorites
     loadFavorites();

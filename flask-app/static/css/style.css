@@ -61,29 +61,6 @@ body {
     box-shadow: var(--shadow-md);
 }
 
-.nav-links {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-}
-
-.nav-link {
-    color: white;
-    text-decoration: none;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius);
-    transition: background-color 0.2s;
-    font-weight: 500;
-}
-
-.nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-.nav-link.active {
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
 .header-content {
     display: flex;
     align-items: center;
